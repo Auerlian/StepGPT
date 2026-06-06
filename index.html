@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stepwise — walk through any list</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%234f46e5'/%3E%3Cpath d='M9 16.5 14 21 23 11' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  /* ---------- Design tokens ---------- */
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-2: #f7f8fa;
+    --text: #181b25;
+    --muted: #6b7180;
+    --faint: #9ca2b0;
+    --border: #e6e8ee;
+    --border-strong: #d7dae2;
+    --accent: #4f46e5;
+    --accent-strong: #4338ca;
+    --accent-soft: #eef1fe;
+    --success: #059669;
+    --success-soft: #e7f5ef;
+    --warn: #c2700a;
+    --warn-soft: #fbf2e4;
+    --danger: #dc2626;
+    --danger-soft: #fceaea;
+    --shadow: 0 1px 2px rgba(18,22,40,.05), 0 8px 24px rgba(18,22,40,.06);
+    --shadow-sm: 0 1px 2px rgba(18,22,40,.07);
+    --radius: 13px;
+    --radius-sm: 9px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1016;
+      --surface: #161922;
+      --surface-2: #1b1f2a;
+      --text: #e8eaf1;
+      --muted: #969cae;
+      --faint: #6b7180;
+      --border: #262b38;
+      --border-strong: #333a4a;
+      --accent: #818cf8;
+      --accent-strong: #a5b4fc;
+      --accent-soft: #1e2440;
+      --success: #34d399;
+      --success-soft: #15271f;
+      --warn: #fbbf24;
+      --warn-soft: #2a2113;
+      --danger: #f87171;
+      --danger-soft: #2a1719;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.4);
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  button { font-family: inherit; cursor: pointer; color: inherit; }
+  svg { display: block; }
+  ::selection { background: var(--accent-soft); }
+
+  .app { display: grid; grid-template-columns: 296px 1fr; height: 100vh; overflow: hidden; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  .sidebar__head { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+  .brand__mark {
+    width: 28px; height: 28px; border-radius: 8px; flex: none;
+    background: linear-gradient(140deg, var(--accent), var(--accent-strong));
+    display: grid; place-items: center; box-shadow: var(--shadow-sm);
+  }
+  .brand__mark svg { width: 16px; height: 16px; stroke: #fff; }
+  .brand__name { font-weight: 700; font-size: 15.5px; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand__sub { color: var(--faint); font-weight: 500; font-size: 11px; }
+  .btn-new {
+    width: 100%; border: 0; background: var(--accent); color: #fff;
+    padding: 10px 14px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 7px; transition: background .15s, transform .05s;
+  }
+  .btn-new svg { width: 16px; height: 16px; stroke: #fff; }
+  .btn-new:hover { background: var(--accent-strong); }
+  .btn-new:active { transform: translateY(1px); }
+
+  .list-scroll { flex: 1; overflow-y: auto; padding: 9px; min-height: 0; }
+  .list-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); padding: 8px 10px 6px; }
+  .saved-item { position: relative; padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 2px; border: 1px solid transparent; transition: background .12s; }
+  .saved-item:hover { background: var(--surface-2); }
+  .saved-item.active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .saved-item__title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 20px; }
+  .saved-item__meta { font-size: 12px; color: var(--muted); margin-top: 5px; display: flex; align-items: center; gap: 7px; }
+  .mini-bar { flex: 1; height: 5px; border-radius: 99px; background: var(--border-strong); overflow: hidden; max-width: 84px; }
+  .mini-bar > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; }
+  .saved-item__del {
+    position: absolute; top: 8px; right: 7px; width: 22px; height: 22px; border: 0; background: transparent;
+    color: var(--faint); border-radius: 6px; font-size: 17px; line-height: 1; opacity: 0;
+    transition: opacity .12s, background .12s, color .12s; display: grid; place-items: center;
+  }
+  .saved-item:hover .saved-item__del { opacity: 1; }
+  .saved-item__del:hover { background: var(--danger-soft); color: var(--danger); }
+  .empty-hint { color: var(--muted); font-size: 13px; padding: 16px 12px; text-align: center; line-height: 1.6; }
+
+  .sidebar__foot { border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 8px; }
+  .foot-btn {
+    flex: 1; border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+    padding: 8px; border-radius: 8px; font-size: 12.5px; font-weight: 500;
+    display: flex; align-items: center; justify-content: center; gap: 6px; transition: border-color .12s, color .12s;
+  }
+  .foot-btn svg { width: 14px; height: 14px; }
+  .foot-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+  /* ---------- Main ---------- */
+  .main { overflow-y: auto; min-width: 0; position: relative; }
+  .main__inner { max-width: 740px; margin: 0 auto; padding: 40px 32px 96px; }
+  .mobile-bar { display: none; }
+
+  /* ---------- Input view ---------- */
+  .view-title { font-size: 23px; font-weight: 700; letter-spacing: -0.03em; margin: 0 0 7px; }
+  .view-sub { color: var(--muted); margin: 0 0 26px; max-width: 58ch; }
+  .field-label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 7px; }
+  .field-label .opt { color: var(--faint); font-weight: 400; }
+  .text-input {
+    width: 100%; padding: 11px 13px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--surface); color: var(--text); font-size: 15px; transition: border-color .12s, box-shadow .12s;
+  }
+  .text-input:focus, .paste-area:focus, .note-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .paste-area {
+    width: 100%; min-height: 280px; resize: vertical; padding: 15px 16px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.6;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+  .btn-primary {
+    border: 0; background: var(--accent); color: #fff; padding: 12px 22px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; transition: background .15s, transform .05s;
+  }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-ghost {
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--muted);
+    padding: 11px 16px; border-radius: var(--radius-sm); font-weight: 500; font-size: 14px; transition: color .12s, border-color .12s;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .hint-inline { color: var(--muted); font-size: 12.5px; margin-top: 14px; }
+  kbd { font-family: inherit; font-size: 11px; background: var(--surface-2); border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; color: var(--text); }
+
+  /* ---------- Walkthrough ---------- */
+  .walk-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+  .title-edit {
+    flex: 1; min-width: 200px; font-size: 22px; font-weight: 700; letter-spacing: -0.03em;
+    border: 1px solid transparent; background: transparent; color: var(--text); padding: 5px 8px; margin: -5px -8px; border-radius: 8px;
+  }
+  .title-edit:hover { background: var(--surface-2); }
+  .title-edit:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .head-actions { display: flex; align-items: center; gap: 8px; }
+  .head-btn {
+    display: flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text);
+    border-radius: 9px; font-weight: 600; font-size: 13.5px; transition: border-color .12s, color .12s, background .12s;
+  }
+  .head-btn svg { width: 16px; height: 16px; }
+  .head-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .head-btn.ok { border-color: var(--success); color: var(--success); }
+  .icon-btn {
+    width: 38px; height: 38px; border: 1px solid var(--border-strong); background: var(--surface);
+    border-radius: 9px; color: var(--muted); display: grid; place-items: center; transition: color .12s, border-color .12s, background .12s;
+  }
+  .icon-btn svg { width: 17px; height: 17px; }
+  .icon-btn:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+
+  .progress-wrap { margin-bottom: 24px; }
+  .progress-meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .progress-meta b { color: var(--text); font-weight: 600; }
+  .progress-track { height: 7px; border-radius: 99px; background: var(--border-strong); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-strong)); transition: width .35s cubic-bezier(.4,0,.2,1); }
+
+  .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 26px; margin-bottom: 20px; animation: rise .22s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .step-card.is-done { border-color: color-mix(in srgb, var(--success) 40%, var(--border)); }
+  .step-card.is-skipped { border-color: color-mix(in srgb, var(--warn) 38%, var(--border)); }
+
+  .step-top { display: flex; gap: 16px; align-items: flex-start; }
+  .step-num { flex: none; width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 16px; transition: background .2s, color .2s; }
+  .step-num svg { width: 20px; height: 20px; }
+  .is-done .step-num { background: var(--success-soft); color: var(--success); }
+  .is-skipped .step-num { background: var(--warn-soft); color: var(--warn); }
+  .step-body { flex: 1; min-width: 0; padding-top: 2px; }
+  .step-text { font-size: 18px; font-weight: 600; line-height: 1.45; letter-spacing: -0.01em; word-wrap: break-word; }
+  .is-done .step-text, .is-skipped .step-text { color: var(--muted); }
+  .step-desc { margin-top: 10px; color: var(--muted); font-size: 14.5px; line-height: 1.65; word-wrap: break-word; }
+  .step-desc code, .step-text code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; background: var(--surface-2); border: 1px solid var(--border); padding: 1px 5px; border-radius: 5px; }
+  .step-desc a, .step-text a { color: var(--accent); }
+  .step-tools { display: flex; gap: 2px; flex: none; }
+  .tool-btn { width: 32px; height: 32px; border: 0; background: transparent; color: var(--faint); border-radius: 7px; display: grid; place-items: center; transition: background .12s, color .12s; }
+  .tool-btn svg { width: 16px; height: 16px; }
+  .tool-btn:hover { background: var(--surface-2); color: var(--text); }
+  .tool-btn.danger:hover { background: var(--danger-soft); color: var(--danger); }
+
+  .status-row { margin-top: 22px; display: flex; gap: 10px; }
+  .complete-toggle {
+    flex: 1; border: 1.5px solid var(--border-strong); background: var(--surface-2); color: var(--text);
+    padding: 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; gap: 10px; transition: all .15s;
+  }
+  .complete-toggle:hover { border-color: var(--success); color: var(--success); }
+  .complete-toggle.done { background: var(--success); border-color: var(--success); color: #fff; }
+  .complete-toggle .box { width: 20px; height: 20px; border-radius: 6px; border: 2px solid currentColor; display: grid; place-items: center; flex: none; }
+  .complete-toggle .box svg { width: 13px; height: 13px; stroke-width: 3; }
+  .complete-toggle.done .box { background: #fff; color: var(--success); border-color: #fff; }
+  .skip-btn {
+    flex: none; min-width: 112px; border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--muted);
+    padding: 12px 18px; border-radius: var(--radius-sm); font-weight: 600; font-size: 15px; transition: all .15s;
+  }
+  .skip-btn:hover { border-color: var(--warn); color: var(--warn); }
+  .skip-btn.skipped { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); }
+
+  .notes-block { margin-top: 22px; }
+  .notes-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .notes-head .field-label { margin: 0; }
+  .save-tag { font-size: 12px; color: var(--success); opacity: 0; transition: opacity .2s; display: flex; align-items: center; gap: 4px; }
+  .save-tag svg { width: 13px; height: 13px; }
+  .save-tag.show { opacity: 1; }
+  .note-area {
+    width: 100%; min-height: 92px; resize: vertical; padding: 12px 13px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text); font-size: 14.5px; line-height: 1.6; font-family: inherit;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .edit-input { width: 100%; margin-bottom: 10px; }
+  .edit-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+  .nav-row { display: flex; gap: 12px; margin-bottom: 30px; }
+  .nav-btn { flex: 1; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); padding: 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all .12s; }
+  .nav-btn svg { width: 18px; height: 18px; }
+  .nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: .42; cursor: not-allowed; }
+  .nav-btn.next { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .nav-btn.next:hover:not(:disabled) { background: var(--accent-strong); }
+
+  .overview__label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin-bottom: 11px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { min-width: 38px; height: 38px; padding: 0 8px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--muted); font-weight: 600; font-size: 13.5px; display: flex; align-items: center; justify-content: center; gap: 5px; transition: all .12s; position: relative; }
+  .chip svg { width: 13px; height: 13px; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.done { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 36%, var(--border)); color: var(--success); }
+  .chip.skipped { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 34%, var(--border)); color: var(--warn); }
+  .chip.skipped .lbl { text-decoration: line-through; opacity: .8; }
+  .chip.current { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .chip.has-note::after { content: ""; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 99px; background: var(--accent); border: 1.5px solid var(--surface); }
+
+  .done-banner { margin-bottom: 20px; padding: 14px 18px; border-radius: var(--radius); background: var(--success-soft); border: 1px solid color-mix(in srgb, var(--success) 36%, var(--border)); color: var(--success); display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14.5px; animation: rise .25s ease; }
+  .done-banner svg { width: 22px; height: 22px; flex: none; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 99px; font-size: 14px; font-weight: 500; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 60; max-width: 90vw; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .backdrop { display: none; }
+
+  @media (max-width: 860px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { position: fixed; inset: 0 auto 0 0; width: 286px; z-index: 50; transform: translateX(-102%); transition: transform .22s ease; box-shadow: var(--shadow); }
+    .app.nav-open .sidebar { transform: none; }
+    .backdrop { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.42); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+    .app.nav-open .backdrop { opacity: 1; pointer-events: auto; }
+    .mobile-bar { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 20; }
+    .mobile-bar button { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; }
+    .mobile-bar svg { width: 20px; height: 20px; }
+    .mobile-bar .mb-title { font-weight: 700; letter-spacing: -.02em; }
+    .main__inner { padding: 22px 18px 80px; }
+    .status-row { flex-wrap: wrap; }
+    .skip-btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar__head">
+      <div class="brand">
+        <span class="brand__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <span><div class="brand__name">Stepwise</div><div class="brand__sub">walk through any list</div></span>
+      </div>
+      <button class="btn-new" id="newListBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        New list
+      </button>
+    </div>
+    <div class="list-scroll">
+      <div class="list-label">Saved lists</div>
+      <div id="listContainer"></div>
+    </div>
+    <div class="sidebar__foot">
+      <button class="foot-btn" id="exportBtn" title="Download a backup of all your lists">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg> Export
+      </button>
+      <button class="foot-btn" id="importBtn" title="Restore lists from a backup file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg> Import
+      </button>
+      <input type="file" id="importInput" accept="application/json,.json" hidden />
+    </div>
+  </aside>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <main class="main" id="main">
+    <div class="mobile-bar">
+      <button id="menuBtn" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <span class="mb-title">Stepwise</span>
+    </div>
+    <div class="main__inner">
+
+      <!-- INPUT VIEW -->
+      <section id="inputView">
+        <h1 class="view-title">Paste a list to walk through</h1>
+        <p class="view-sub">Drop in a numbered list, bullet points, or any step-by-step instructions an AI gave you. Stepwise turns it into a guided checklist you can work through, annotate, and send back.</p>
+
+        <label class="field-label" for="titleInput">List name <span class="opt">(optional)</span></label>
+        <input class="text-input" id="titleInput" type="text" placeholder="e.g. Deploy the staging server" style="margin-bottom:18px" />
+
+        <label class="field-label" for="pasteInput">Your steps</label>
+        <textarea class="paste-area" id="pasteInput" placeholder="1. First, do this thing&#10;2. Then handle the next part&#10;   - a small sub-detail&#10;3. Finally, verify everything works&#10;&#10;Bullets, numbers, markdown, or plain lines all work."></textarea>
+
+        <div class="row-between">
+          <button class="btn-primary" id="createBtn">Create checklist
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;stroke:#fff"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+          <button class="btn-ghost" id="exampleBtn">Try an example</button>
+        </div>
+        <p class="hint-inline">Press <kbd>&#8984;</kbd>+<kbd>Enter</kbd> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>) to create. Everything saves automatically in this browser.</p>
+      </section>
+
+      <!-- WALKTHROUGH VIEW -->
+      <section id="walkView" hidden></section>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ Inline icon set (no emoji) ============ */
+  var ICON = {
+    check:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    checkCircle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14.01l-3-3"/></svg>',
+    trash:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>',
+    pencil:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    copy:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    chevL:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+    chevR:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>'
+  };
+
+  /* ============ State & storage ============ */
+  var STORAGE_KEY = "stepwise.lists.v1";
+  var STATUS = { TODO: "not_attempted", DONE: "completed", SKIP: "skipped" };
+  var state = { lists: [], activeId: null };
+  var editingStep = false;
+  var saveTagTimer = null, toastTimer = null, noteSaveTimer = null, copiedTimer = null;
+
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  function normalizeList(l) {
+    l.currentIndex = l.currentIndex || 0;
+    l.createdAt = l.createdAt || Date.now();
+    l.updatedAt = l.updatedAt || l.createdAt;
+    if (!Array.isArray(l.steps)) l.steps = [];
+    l.steps.forEach(function (s) {
+      if (!s.id) s.id = uid();
+      if (!s.status) s.status = s.done ? STATUS.DONE : STATUS.TODO; // migrate old boolean
+      if (s.status !== STATUS.DONE && s.status !== STATUS.SKIP) s.status = STATUS.TODO;
+      delete s.done;
+      if (s.note == null) s.note = "";
+      if (s.text == null) s.text = "";
+      if (s.description == null) s.description = "";
+    });
+    return l;
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        state.lists = (Array.isArray(data.lists) ? data.lists : []).map(normalizeList);
+        state.activeId = data.activeId || null;
+      }
+    } catch (e) { console.warn("Could not load saved lists:", e); }
+  }
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ lists: state.lists, activeId: state.activeId })); }
+    catch (e) { console.warn("Could not save:", e); toast("Couldn't save — storage may be full"); }
+  }
+  function activeList() {
+    for (var i = 0; i < state.lists.length; i++) if (state.lists[i].id === state.activeId) return state.lists[i];
+    return null;
+  }
+  function counts(list) {
+    var c = { completed: 0, skipped: 0, not_attempted: 0 };
+    list.steps.forEach(function (s) { c[s.status] = (c[s.status] || 0) + 1; });
+    return c;
+  }
+
+  /* ============ Parsing ============ */
+  var MARKER = /^\s*([-*+•‣◦]|\d{1,3}[.)]|\(\d{1,3}\)|#{1,6}|step\s+\d+[:.)\-]*)\s+/i;
+
+  function makeStep(text, description) {
+    return { id: uid(), text: (text || "").trim(), description: (description || "").trim(), status: STATUS.TODO, note: "" };
+  }
+  function parseSteps(raw) {
+    var text = (raw || "").replace(/\r\n?/g, "\n").trim();
+    if (!text) return [];
+    var lines = text.split("\n");
+    var nonEmpty = lines.filter(function (l) { return l.trim().length; });
+    var marked = nonEmpty.filter(function (l) { return MARKER.test(l); }).length;
+    var steps = [];
+    if (marked >= 2 && marked >= nonEmpty.length * 0.4) {
+      var current = null;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (!line.trim()) continue;
+        if (MARKER.test(line)) { current = makeStep(line.replace(MARKER, "")); steps.push(current); }
+        else if (current) { current.description += (current.description ? "\n" : "") + line.trim(); }
+        else { current = makeStep(line); steps.push(current); }
+      }
+    } else if (text.indexOf("\n\n") !== -1) {
+      text.split(/\n{2,}/).forEach(function (p) { var pl = p.trim().split("\n"); steps.push(makeStep(pl[0], pl.slice(1).join("\n"))); });
+    } else {
+      nonEmpty.forEach(function (l) { steps.push(makeStep(l)); });
+    }
+    return steps;
+  }
+  function deriveTitle(raw) {
+    var first = (raw || "").replace(/\r\n?/g, "\n").split("\n").map(function (l) { return l.trim(); }).filter(Boolean)[0] || "";
+    first = first.replace(MARKER, "").replace(/[*_`#]/g, "").trim();
+    if (first.length > 52) first = first.slice(0, 52).trim() + "…";
+    return first || "Untitled list";
+  }
+
+  /* ============ Formatting ============ */
+  function escapeHtml(s) { return (s || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function formatInline(s) {
+    s = escapeHtml(s);
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    s = s.replace(/(^|[\s(])(https?:\/\/[^\s)]+)/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, "$1<em>$2</em>");
+    return s;
+  }
+  function formatMultiline(s) { return (s || "").split("\n").map(formatInline).join("<br>"); }
+
+  /* ============ Copy for AI ============ */
+  function statusLabel(st) { return st === STATUS.DONE ? "Completed" : st === STATUS.SKIP ? "Skipped" : "Not attempted"; }
+
+  function buildCopyText(list) {
+    var total = list.steps.length, c = counts(list), out = [];
+    out.push(list.title);
+    var parts = [c.completed + "/" + total + " completed"];
+    if (c.skipped) parts.push(c.skipped + " skipped");
+    if (c.not_attempted) parts.push(c.not_attempted + " not attempted");
+    out.push("Progress: " + parts.join(", "));
+    out.push("");
+    list.steps.forEach(function (s, idx) {
+      out.push((idx + 1) + ". [" + statusLabel(s.status) + "] " + s.text);
+      if (s.description) s.description.split("\n").forEach(function (d) { d = d.trim(); if (d) out.push("   " + d); });
+      var note = (s.note || "").trim();
+      if (note) { var nl = note.split("\n"); out.push("   Notes: " + nl[0]); for (var k = 1; k < nl.length; k++) out.push("          " + nl[k]); }
+      out.push("");
+    });
+    return out.join("\n").replace(/\n+$/, "") + "\n";
+  }
+  function fallbackCopy(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; ta.style.top = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok = document.execCommand("copy"); document.body.removeChild(ta); return ok;
+    } catch (e) { return false; }
+  }
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallbackCopy(text); });
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+  function copyForAI() {
+    var list = activeList(); if (!list) return;
+    copyToClipboard(buildCopyText(list)).then(function (ok) {
+      if (ok) { toast("Copied as plain text — paste it back to your AI"); flashCopied(); }
+      else { toast("Couldn't access clipboard — try again"); }
+    });
+  }
+  function flashCopied() {
+    var b = document.getElementById("copyBtn"); if (!b) return;
+    var prev = b.getAttribute("data-label") || b.innerHTML;
+    b.setAttribute("data-label", prev);
+    b.innerHTML = ICON.check + "Copied"; b.classList.add("ok");
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(function () { var bb = document.getElementById("copyBtn"); if (bb) { bb.innerHTML = bb.getAttribute("data-label"); bb.classList.remove("ok"); bb.removeAttribute("data-label"); } }, 1600);
+  }
+
+  /* ============ Actions ============ */
+  function newList() {
+    state.activeId = null; editingStep = false;
+    document.getElementById("titleInput").value = "";
+    document.getElementById("pasteInput").value = "";
+    persist(); render(); closeNav();
+    document.getElementById("pasteInput").focus();
+  }
+  function handleCreate() {
+    var rawEl = document.getElementById("pasteInput"), titleEl = document.getElementById("titleInput");
+    var steps = parseSteps(rawEl.value);
+    if (!steps.length) { toast("Paste some steps first"); rawEl.focus(); return; }
+    var list = { id: uid(), title: titleEl.value.trim() || deriveTitle(rawEl.value), createdAt: Date.now(), updatedAt: Date.now(), currentIndex: 0, steps: steps };
+    state.lists.unshift(list); state.activeId = list.id; editingStep = false;
+    persist(); render();
+    toast("Created — " + steps.length + " step" + (steps.length === 1 ? "" : "s"));
+  }
+  function openList(id) { state.activeId = id; editingStep = false; persist(); render(); closeNav(); document.getElementById("main").scrollTop = 0; }
+  function deleteList(id) {
+    var l = null; for (var i = 0; i < state.lists.length; i++) if (state.lists[i].id === id) l = state.lists[i];
+    if (!l) return;
+    if (!confirm('Delete "' + l.title + '"? This cannot be undone.')) return;
+    state.lists = state.lists.filter(function (x) { return x.id !== id; });
+    if (state.activeId === id) state.activeId = null;
+    persist(); render(); toast("List deleted");
+  }
+  function go(delta) {
+    var list = activeList(); if (!list) return;
+    var ni = list.currentIndex + delta;
+    if (ni < 0 || ni >= list.steps.length) return;
+    list.currentIndex = ni; editingStep = false; persist(); renderWalk(list);
+  }
+  function jump(i) { var list = activeList(); if (!list) return; list.currentIndex = i; editingStep = false; persist(); renderWalk(list); }
+  function setStatus(target) {
+    var list = activeList(); if (!list) return;
+    var step = list.steps[list.currentIndex];
+    step.status = (step.status === target) ? STATUS.TODO : target;
+    list.updatedAt = Date.now(); persist(); renderWalk(list); renderSidebar();
+  }
+  function deleteStep(idx) {
+    var list = activeList(); if (!list) return;
+    if (list.steps.length <= 1) { toast("A list needs at least one step"); return; }
+    if (!confirm("Delete this step?")) return;
+    list.steps.splice(idx, 1);
+    if (list.currentIndex >= list.steps.length) list.currentIndex = list.steps.length - 1;
+    list.updatedAt = Date.now(); persist(); renderWalk(list); renderSidebar(); toast("Step removed");
+  }
+
+  function exportData() {
+    if (!state.lists.length) { toast("No lists to export yet"); return; }
+    var blob = new Blob([JSON.stringify({ app: "stepwise", version: 1, lists: state.lists }, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob), a = document.createElement("a"), d = new Date();
+    a.href = url;
+    a.download = "stepwise-backup-" + d.getFullYear() + String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0") + ".json";
+    a.click(); URL.revokeObjectURL(url); toast("Backup downloaded");
+  }
+  function importData(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var data = JSON.parse(reader.result);
+        var incoming = data.lists || (Array.isArray(data) ? data : null);
+        if (!incoming || !incoming.length) { toast("No lists found in that file"); return; }
+        var have = {}; state.lists.forEach(function (l) { have[l.id] = true; });
+        var added = 0;
+        incoming.forEach(function (l) {
+          if (!l || !l.steps) return;
+          if (have[l.id]) l.id = uid();
+          state.lists.unshift(normalizeList(l)); added++;
+        });
+        persist(); render(); toast("Imported " + added + " list" + (added === 1 ? "" : "s"));
+      } catch (e) { toast("Couldn't read that file"); }
+    };
+    reader.readAsText(file);
+  }
+
+  /* ============ Rendering ============ */
+  function fmtDate(ts) { try { return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" }); } catch (e) { return ""; } }
+
+  function render() {
+    renderSidebar();
+    var list = activeList();
+    var inputView = document.getElementById("inputView"), walkView = document.getElementById("walkView");
+    if (list) { inputView.hidden = true; walkView.hidden = false; renderWalk(list); }
+    else { walkView.hidden = true; inputView.hidden = false; }
+  }
+
+  function renderSidebar() {
+    var c = document.getElementById("listContainer");
+    if (!state.lists.length) { c.innerHTML = '<div class="empty-hint">No lists yet.<br>Paste some steps and hit <b>Create checklist</b> to begin.</div>'; return; }
+    c.innerHTML = "";
+    state.lists.forEach(function (list) {
+      var total = list.steps.length, done = counts(list).completed, pct = total ? Math.round(done / total * 100) : 0;
+      var item = document.createElement("div");
+      item.className = "saved-item" + (list.id === state.activeId ? " active" : "");
+      item.innerHTML =
+        '<div class="saved-item__title"></div>' +
+        '<button class="saved-item__del" title="Delete list">&times;</button>' +
+        '<div class="saved-item__meta"><span class="mini-bar"><i style="width:' + pct + '%"></i></span>' +
+        '<span>' + done + '/' + total + '</span><span>&middot; ' + fmtDate(list.createdAt) + '</span></div>';
+      item.querySelector(".saved-item__title").textContent = list.title;
+      item.addEventListener("click", function () { openList(list.id); });
+      item.querySelector(".saved-item__del").addEventListener("click", function (e) { e.stopPropagation(); deleteList(list.id); });
+      c.appendChild(item);
+    });
+  }
+
+  function renderWalk(list) {
+    var i = list.currentIndex;
+    if (i >= list.steps.length) i = list.currentIndex = list.steps.length - 1;
+    var step = list.steps[i], total = list.steps.length, c = counts(list);
+    var pct = total ? Math.round(c.completed / total * 100) : 0;
+    var addressed = c.completed + c.skipped;
+    var isDone = step.status === STATUS.DONE, isSkip = step.status === STATUS.SKIP;
+
+    var html = "";
+    html += '<div class="walk-head">';
+    html += '<input class="title-edit" id="titleEdit" value="" />';
+    html += '<div class="head-actions">';
+    html += '<button class="head-btn" id="copyBtn" title="Copy this list with each step\'s status and notes as plain text — paste it back to your AI">' + ICON.copy + 'Copy for AI</button>';
+    html += '<button class="icon-btn" id="deleteListBtn" title="Delete this list">' + ICON.trash + '</button>';
+    html += '</div></div>';
+
+    html += '<div class="progress-wrap"><div class="progress-meta">';
+    html += '<span>Step <b>' + (i + 1) + '</b> of <b>' + total + '</b></span>';
+    html += '<span><b>' + c.completed + '</b> of ' + total + ' done' + (c.skipped ? ' &middot; ' + c.skipped + ' skipped' : '') + ' &middot; ' + pct + '%</span>';
+    html += '</div><div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
+
+    if (addressed === total && total > 0) {
+      var msg = c.skipped ? ("All steps addressed — " + c.completed + " completed, " + c.skipped + " skipped.") : ("All " + total + " steps complete.");
+      html += '<div class="done-banner">' + ICON.checkCircle + '<span>' + msg + '</span></div>';
+    }
+
+    html += '<div class="step-card' + (isDone ? " is-done" : isSkip ? " is-skipped" : "") + '">';
+    html += '<div class="step-top">';
+    html += '<div class="step-num">' + (isDone ? ICON.check : (i + 1)) + '</div>';
+    html += '<div class="step-body">';
+    if (editingStep) {
+      html += '<input class="text-input edit-input" id="editText" value="" />';
+      html += '<textarea class="text-input edit-input" id="editDesc" rows="3" placeholder="Details (optional)"></textarea>';
+      html += '<div class="edit-actions"><button class="btn-primary" id="saveEditBtn" style="padding:9px 18px;font-size:14px">Save</button><button class="btn-ghost" id="cancelEditBtn">Cancel</button></div>';
+    } else {
+      html += '<div class="step-text">' + formatInline(step.text) + '</div>';
+      if (step.description) html += '<div class="step-desc">' + formatMultiline(step.description) + '</div>';
+    }
+    html += '</div>';
+    if (!editingStep) {
+      html += '<div class="step-tools">';
+      html += '<button class="tool-btn" id="editStepBtn" title="Edit step">' + ICON.pencil + '</button>';
+      html += '<button class="tool-btn danger" id="delStepBtn" title="Delete step">' + ICON.trash + '</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    if (!editingStep) {
+      html += '<div class="status-row">';
+      html += '<button class="complete-toggle' + (isDone ? " done" : "") + '" id="completeBtn"><span class="box">' + (isDone ? ICON.check : "") + '</span>' + (isDone ? "Completed" : "Mark complete") + '</button>';
+      html += '<button class="skip-btn' + (isSkip ? " skipped" : "") + '" id="skipBtn">' + (isSkip ? "Skipped" : "Skip") + '</button>';
+      html += '</div>';
+
+      html += '<div class="notes-block"><div class="notes-head"><label class="field-label" for="noteArea">Notes for this step</label>';
+      html += '<span class="save-tag" id="saveTag">' + ICON.check + 'saved</span></div>';
+      html += '<textarea class="note-area" id="noteArea" placeholder="Jot down anything for this step — values you used, decisions, blockers, why you skipped it…"></textarea></div>';
+    }
+    html += '</div>';
+
+    html += '<div class="nav-row">';
+    html += '<button class="nav-btn" id="prevBtn"' + (i === 0 ? " disabled" : "") + '>' + ICON.chevL + 'Previous</button>';
+    html += '<button class="nav-btn next" id="nextBtn"' + (i >= total - 1 ? " disabled" : "") + '>Next' + ICON.chevR + '</button>';
+    html += '</div>';
+
+    html += '<div class="overview"><div class="overview__label">Overview &middot; jump to any step</div><div class="chips" id="chips"></div></div>';
+
+    var v = document.getElementById("walkView");
+    v.innerHTML = html;
+
+    /* wire */
+    var titleEdit = v.querySelector("#titleEdit");
+    titleEdit.value = list.title;
+    titleEdit.addEventListener("change", function () { list.title = titleEdit.value.trim() || "Untitled list"; list.updatedAt = Date.now(); persist(); renderSidebar(); });
+    titleEdit.addEventListener("keydown", function (e) { if (e.key === "Enter") titleEdit.blur(); });
+    v.querySelector("#copyBtn").addEventListener("click", copyForAI);
+    v.querySelector("#deleteListBtn").addEventListener("click", function () { deleteList(list.id); });
+    v.querySelector("#prevBtn").addEventListener("click", function () { go(-1); });
+    v.querySelector("#nextBtn").addEventListener("click", function () { go(1); });
+
+    if (editingStep) {
+      var et = v.querySelector("#editText"), ed = v.querySelector("#editDesc");
+      et.value = step.text; ed.value = step.description; et.focus();
+      v.querySelector("#saveEditBtn").addEventListener("click", function () { step.text = et.value.trim(); step.description = ed.value.trim(); list.updatedAt = Date.now(); editingStep = false; persist(); renderWalk(list); renderSidebar(); });
+      v.querySelector("#cancelEditBtn").addEventListener("click", function () { editingStep = false; renderWalk(list); });
+    } else {
+      v.querySelector("#completeBtn").addEventListener("click", function () { setStatus(STATUS.DONE); });
+      v.querySelector("#skipBtn").addEventListener("click", function () { setStatus(STATUS.SKIP); });
+      v.querySelector("#editStepBtn").addEventListener("click", function () { editingStep = true; renderWalk(list); });
+      v.querySelector("#delStepBtn").addEventListener("click", function () { deleteStep(i); });
+      var note = v.querySelector("#noteArea");
+      note.value = step.note || "";
+      note.addEventListener("input", function () {
+        step.note = note.value; list.updatedAt = Date.now();
+        clearTimeout(noteSaveTimer);
+        noteSaveTimer = setTimeout(function () { persist(); flashSaved(); }, 400);
+      });
+      note.addEventListener("keydown", function (e) { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); persist(); go(1); } });
+    }
+
+    var chips = v.querySelector("#chips");
+    list.steps.forEach(function (s, idx) {
+      var chip = document.createElement("button");
+      var cls = "chip" + (s.status === STATUS.DONE ? " done" : s.status === STATUS.SKIP ? " skipped" : "") + (idx === i ? " current" : "") + (s.note ? " has-note" : "");
+      chip.className = cls;
+      chip.innerHTML = (s.status === STATUS.DONE ? ICON.check : "") + '<span class="lbl">' + (idx + 1) + '</span>';
+      chip.title = s.text || ("Step " + (idx + 1));
+      chip.addEventListener("click", function () { jump(idx); });
+      chips.appendChild(chip);
+    });
+  }
+
+  function flashSaved() { var t = document.getElementById("saveTag"); if (!t) return; t.classList.add("show"); clearTimeout(saveTagTimer); saveTagTimer = setTimeout(function () { t.classList.remove("show"); }, 1400); }
+  function toast(msg) { var t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2400); }
+
+  function fillExample() {
+    document.getElementById("titleInput").value = "Ship a new feature branch";
+    document.getElementById("pasteInput").value =
+      "1. Pull the latest main and create a feature branch\n" +
+      "   Run: git checkout main && git pull, then git checkout -b feature/my-thing\n" +
+      "2. Make your code changes and write tests\n" +
+      "3. Run the full test suite locally and confirm it passes\n" +
+      "4. Commit with a clear message and push the branch\n" +
+      "5. Open a pull request and request a review\n" +
+      "6. Address review comments, then merge once approved";
+    document.getElementById("pasteInput").focus(); toast("Example loaded — hit Create");
+  }
+
+  function openNav() { document.getElementById("app").classList.add("nav-open"); }
+  function closeNav() { document.getElementById("app").classList.remove("nav-open"); }
+
+  function init() {
+    load();
+    document.getElementById("newListBtn").addEventListener("click", newList);
+    document.getElementById("createBtn").addEventListener("click", handleCreate);
+    document.getElementById("exampleBtn").addEventListener("click", fillExample);
+    document.getElementById("exportBtn").addEventListener("click", exportData);
+    document.getElementById("importBtn").addEventListener("click", function () { document.getElementById("importInput").click(); });
+    document.getElementById("importInput").addEventListener("change", function (e) { if (e.target.files && e.target.files[0]) importData(e.target.files[0]); e.target.value = ""; });
+    document.getElementById("menuBtn").addEventListener("click", openNav);
+    document.getElementById("backdrop").addEventListener("click", closeNav);
+    document.getElementById("pasteInput").addEventListener("keydown", function (e) { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); handleCreate(); } });
+    document.addEventListener("keydown", function (e) {
+      if (!activeList() || editingStep) return;
+      var tag = (document.activeElement && document.activeElement.tagName) || "";
+      if (tag === "TEXTAREA" || tag === "INPUT") return;
+      if (e.key === "ArrowRight") { e.preventDefault(); go(1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); go(-1); }
+    });
+    render();
+
+    // Lightweight debug/automation hook (harmless).
+    window.__stepwise = { state: state, buildCopyText: buildCopyText, activeList: activeList };
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+</body>
+</html>
