@@ -239,6 +239,35 @@
   .edit-input { width: 100%; margin-bottom: 10px; }
   .edit-actions { display: flex; gap: 8px; margin-top: 4px; }
 
+  /* Subtasks */
+  .subtasks-area { margin-top: 16px; }
+  .break-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px dashed var(--border-strong); background: var(--surface); color: var(--muted); padding: 9px 14px; border-radius: 9px; font-weight: 600; font-size: 13.5px; transition: all .12s; }
+  .break-btn svg { width: 16px; height: 16px; }
+  .break-btn:hover { border-color: var(--accent); color: var(--accent); border-style: solid; }
+  .subtasks { border-top: 1px dashed var(--border); padding-top: 14px; }
+  .subtasks__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .subtasks__title { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); }
+  .subtasks__title svg { width: 15px; height: 15px; }
+  .subtasks__count { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: none; letter-spacing: 0; }
+  .subtasks__clear { border: 0; background: transparent; color: var(--faint); font-size: 12px; font-weight: 500; }
+  .subtasks__clear:hover { color: var(--danger); }
+  .subtask { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+  .subtask__check { flex: none; width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border-strong); background: var(--surface); display: grid; place-items: center; color: #fff; transition: all .12s; }
+  .subtask__check svg { width: 13px; height: 13px; stroke-width: 3; }
+  .subtask__check:hover { border-color: var(--success); }
+  .subtask__check.done { background: var(--success); border-color: var(--success); }
+  .subtask__num { flex: none; min-width: 30px; font-size: 12.5px; font-weight: 700; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .subtask__text { flex: 1; min-width: 0; border: 1px solid transparent; background: transparent; color: var(--text); font-size: 14.5px; font-family: inherit; padding: 5px 8px; margin: 0 -8px; border-radius: 7px; }
+  .subtask__text:hover { background: var(--surface-2); }
+  .subtask__text:focus { outline: none; background: var(--surface); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .subtask.done .subtask__text { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--border-strong); }
+  .subtask__del { flex: none; width: 26px; height: 26px; border: 0; background: transparent; color: var(--faint); border-radius: 6px; display: grid; place-items: center; opacity: .55; transition: all .12s; }
+  .subtask__del svg { width: 14px; height: 14px; }
+  .subtask__del:hover { opacity: 1; background: var(--danger-soft); color: var(--danger); }
+  .add-subtask { margin-top: 4px; display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: var(--accent); font-weight: 600; font-size: 13px; padding: 6px 0; }
+  .add-subtask svg { width: 14px; height: 14px; }
+  .add-subtask:hover { text-decoration: underline; }
+
   .nav-row { display: flex; gap: 12px; margin-bottom: 30px; }
   .nav-btn { flex: 1; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); padding: 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 14.5px; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all .12s; }
   .nav-btn svg { width: 18px; height: 18px; }
@@ -361,7 +390,10 @@
     pencil:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     copy:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
     chevL:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
-    chevR:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>'
+    chevR:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+    split:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="7" height="5" rx="1"/><rect x="14.5" y="9.5" width="7" height="5" rx="1"/><rect x="14.5" y="16" width="7" height="5" rx="1"/><path d="M6 8v10.5M6 12h8.5M6 18.5h8.5"/></svg>',
+    plusSmall:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+    x:          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
   };
 
   /* ============ State & storage ============ */
@@ -386,6 +418,8 @@
       if (s.note == null) s.note = "";
       if (s.text == null) s.text = "";
       if (s.description == null) s.description = "";
+      if (!Array.isArray(s.subtasks)) s.subtasks = [];
+      s.subtasks = s.subtasks.filter(Boolean).map(function (t) { return { id: t.id || uid(), text: t.text || "", done: !!t.done }; });
     });
     return l;
   }
@@ -415,34 +449,106 @@
   }
 
   /* ============ Parsing ============ */
+  // MARKER strips a single leading list marker (used for titles).
   var MARKER = /^\s*([-*+•‣◦]|\d{1,3}[.)]|\(\d{1,3}\)|#{1,6}|step\s+\d+[:.)\-]*)\s+/i;
 
   function makeStep(text, description) {
-    return { id: uid(), text: (text || "").trim(), description: (description || "").trim(), status: STATUS.TODO, note: "" };
+    return { id: uid(), text: (text || "").trim(), description: (description || "").trim(), status: STATUS.TODO, note: "", subtasks: [] };
   }
+
+  function indentOf(ws) { var n = 0; for (var i = 0; i < (ws || "").length; i++) n += ws[i] === "\t" ? 4 : 1; return n; }
+
+  // Classify a line: ordered marker (1. / 1) / (1) / Step 1), bullet/heading, or plain prose.
+  function lead(line) {
+    var m;
+    if ((m = line.match(/^(\s*)(\d{1,3})[.)]\s+(.*)$/)))              return { indent: indentOf(m[1]), kind: "ord", num: +m[2], text: m[3] };
+    if ((m = line.match(/^(\s*)\((\d{1,3})\)\s+(.*)$/)))             return { indent: indentOf(m[1]), kind: "ord", num: +m[2], text: m[3] };
+    if ((m = line.match(/^(\s*)step\s+(\d{1,3})\b[:.)\-]*\s+(.*)$/i))) return { indent: indentOf(m[1]), kind: "ord", num: +m[2], text: m[3] };
+    if ((m = line.match(/^(\s*)[-*+•‣◦]\s+(.*)$/)))                  return { indent: indentOf(m[1]), kind: "bul", num: null, text: m[2] };
+    if ((m = line.match(/^(\s*)#{1,6}\s+(.*)$/)))                     return { indent: indentOf(m[1]), kind: "bul", num: null, text: m[2] };
+    return { indent: indentOf((line.match(/^(\s*)/) || ["", ""])[1]), kind: "none", num: null, text: line.trim() };
+  }
+
+  var DIVIDER = /^\s*(?:[-_*]{3,}|⸻+|—{3,}|=+)\s*$/;
+  function cleanDesc(d) {
+    var lines = (d || "").split("\n").map(function (l) { return l.replace(/\s+$/, ""); })
+      .filter(function (l) { return !DIVIDER.test(l); });
+    var out = [], prevBlank = false;
+    lines.forEach(function (l) { var blank = !l.trim(); if (blank && prevBlank) return; out.push(l); prevBlank = blank; });
+    return out.join("\n").trim();
+  }
+
+  // Parse pasted text into TOP-LEVEL steps only. A new step is an ordered marker at the
+  // base indent whose number continues the outer sequence (== next expected). Nested
+  // numbered lists, bullets and prose stay inside the step's details — ready to be turned
+  // into subtasks on demand.
   function parseSteps(raw) {
-    var text = (raw || "").replace(/\r\n?/g, "\n").trim();
-    if (!text) return [];
+    var text = (raw || "").replace(/\r\n?/g, "\n").replace(/\u00a0/g, " ");
+    text = text.replace(/^\n+/, "").replace(/\s+$/, "");
+    if (!text.trim()) return [];
     var lines = text.split("\n");
-    var nonEmpty = lines.filter(function (l) { return l.trim().length; });
-    var marked = nonEmpty.filter(function (l) { return MARKER.test(l); }).length;
-    var steps = [];
-    if (marked >= 2 && marked >= nonEmpty.length * 0.4) {
-      var current = null;
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (!line.trim()) continue;
-        if (MARKER.test(line)) { current = makeStep(line.replace(MARKER, "")); steps.push(current); }
-        else if (current) { current.description += (current.description ? "\n" : "") + line.trim(); }
-        else { current = makeStep(line); steps.push(current); }
-      }
-    } else if (text.indexOf("\n\n") !== -1) {
-      text.split(/\n{2,}/).forEach(function (p) { var pl = p.trim().split("\n"); steps.push(makeStep(pl[0], pl.slice(1).join("\n"))); });
-    } else {
-      nonEmpty.forEach(function (l) { steps.push(makeStep(l)); });
+    var infos = lines.map(lead);
+
+    var ordered = infos.filter(function (x) { return x.kind === "ord"; });
+    var numberedMode = false, baseIndent = 0;
+    if (ordered.length >= 2) {
+      baseIndent = Math.min.apply(null, ordered.map(function (x) { return x.indent; }));
+      if (ordered.filter(function (x) { return x.indent <= baseIndent; }).length >= 2) numberedMode = true;
     }
-    return steps;
+
+    var steps = [], current = null;
+
+    if (numberedMode) {
+      var expected = null, preamble = [];
+      for (var i = 0; i < lines.length; i++) {
+        var info = infos[i], line = lines[i];
+        var isTop = info.kind === "ord" && info.indent <= baseIndent + 1 && (expected === null || info.num === expected);
+        if (isTop) {
+          current = makeStep(info.text);
+          if (!steps.length && preamble.length) current.description = preamble.join("\n");
+          preamble = [];
+          steps.push(current);
+          expected = info.num + 1;
+        } else if (current) {
+          current.description += "\n" + line;
+        } else if (line.trim()) {
+          preamble.push(line.trim());
+        }
+      }
+    } else {
+      var markers = infos.filter(function (x) { return x.kind !== "none"; });
+      if (markers.length >= 2) {
+        var base2 = Math.min.apply(null, markers.map(function (x) { return x.indent; }));
+        for (var j = 0; j < lines.length; j++) {
+          var inf = infos[j], ln = lines[j];
+          if (inf.kind !== "none" && inf.indent <= base2 + 1) { current = makeStep(inf.text); steps.push(current); }
+          else if (current) { current.description += "\n" + ln; }
+          else if (ln.trim()) { current = makeStep(ln); steps.push(current); }
+        }
+      } else if (text.indexOf("\n\n") !== -1) {
+        text.split(/\n{2,}/).forEach(function (p) { var pl = p.trim().split("\n"); steps.push(makeStep(pl[0], pl.slice(1).join("\n"))); });
+      } else {
+        lines.filter(function (l) { return l.trim(); }).forEach(function (l) { steps.push(makeStep(l)); });
+      }
+    }
+
+    steps.forEach(function (s) { s.description = cleanDesc(s.description); });
+    return steps.filter(function (s) { return s.text || s.description; });
   }
+
+  // Pull a sub-list out of a step's details -> { subtask texts, leftover description }.
+  function extractSubtasks(desc) {
+    if (!desc) return null;
+    var items = [], remaining = [];
+    desc.split("\n").forEach(function (ln) {
+      var info = lead(ln);
+      if (info.kind !== "none" && info.text.trim()) items.push(info.text.trim());
+      else if (ln.trim()) remaining.push(ln.trim());
+    });
+    if (items.length >= 2) return { subtasks: items, remaining: remaining.join("\n") };
+    return null;
+  }
+
   function deriveTitle(raw) {
     var first = (raw || "").replace(/\r\n?/g, "\n").split("\n").map(function (l) { return l.trim(); }).filter(Boolean)[0] || "";
     first = first.replace(MARKER, "").replace(/[*_`#]/g, "").trim();
@@ -477,6 +583,7 @@
     list.steps.forEach(function (s, idx) {
       out.push((idx + 1) + ". [" + statusLabel(s.status) + "] " + s.text);
       if (s.description) s.description.split("\n").forEach(function (d) { d = d.trim(); if (d) out.push("   " + d); });
+      (s.subtasks || []).forEach(function (st, sj) { out.push("   " + (idx + 1) + "." + (sj + 1) + " [" + (st.done ? "x" : " ") + "] " + st.text); });
       var note = (s.note || "").trim();
       if (note) { var nl = note.split("\n"); out.push("   Notes: " + nl[0]); for (var k = 1; k < nl.length; k++) out.push("          " + nl[k]); }
       out.push("");
@@ -559,6 +666,89 @@
     list.steps.splice(idx, 1);
     if (list.currentIndex >= list.steps.length) list.currentIndex = list.steps.length - 1;
     list.updatedAt = Date.now(); persist(); renderWalk(list); renderSidebar(); toast("Step removed");
+  }
+
+  /* ---- Subtasks ---- */
+  function focusLastSubtask() { var ins = document.querySelectorAll(".subtask__text"); var last = ins[ins.length - 1]; if (last) last.focus(); }
+  function breakIntoSubtasks() {
+    var list = activeList(); if (!list) return; var step = list.steps[list.currentIndex];
+    var ex = extractSubtasks(step.description);
+    if (ex && ex.subtasks.length) {
+      step.subtasks = ex.subtasks.map(function (t) { return { id: uid(), text: t, done: false }; });
+      step.description = cleanDesc(ex.remaining);
+      toast("Split into " + step.subtasks.length + " subtasks");
+      list.updatedAt = Date.now(); persist(); renderWalk(list);
+    } else {
+      step.subtasks = [{ id: uid(), text: "", done: false }];
+      toast("Add your subtasks");
+      list.updatedAt = Date.now(); persist(); renderWalk(list); focusLastSubtask();
+    }
+  }
+  function addSubtask(focus) {
+    var list = activeList(); if (!list) return; var step = list.steps[list.currentIndex];
+    if (!Array.isArray(step.subtasks)) step.subtasks = [];
+    step.subtasks.push({ id: uid(), text: "", done: false });
+    list.updatedAt = Date.now(); persist(); renderWalk(list);
+    if (focus) focusLastSubtask();
+  }
+  function toggleSubtask(sid) {
+    var list = activeList(); if (!list) return; var step = list.steps[list.currentIndex];
+    var st = (step.subtasks || []).filter(function (x) { return x.id === sid; })[0]; if (!st) return;
+    st.done = !st.done; list.updatedAt = Date.now(); persist(); renderWalk(list);
+  }
+  function deleteSubtask(sid) {
+    var list = activeList(); if (!list) return; var step = list.steps[list.currentIndex];
+    step.subtasks = (step.subtasks || []).filter(function (x) { return x.id !== sid; });
+    list.updatedAt = Date.now(); persist(); renderWalk(list);
+  }
+  function clearSubtasks() {
+    var list = activeList(); if (!list) return; var step = list.steps[list.currentIndex];
+    if (!confirm("Remove all subtasks for this step? Their text is folded back into the step details.")) return;
+    var texts = (step.subtasks || []).map(function (s) { return s.text; }).filter(function (t) { return t && t.trim(); });
+    if (texts.length) step.description = cleanDesc((step.description ? step.description + "\n" : "") + texts.map(function (t) { return "- " + t; }).join("\n"));
+    step.subtasks = [];
+    list.updatedAt = Date.now(); persist(); renderWalk(list);
+  }
+  function subtasksHtml(step, idx) {
+    var subs = step.subtasks || [];
+    var h = '<div class="subtasks-area">';
+    if (subs.length) {
+      var done = subs.filter(function (s) { return s.done; }).length;
+      h += '<div class="subtasks"><div class="subtasks__head">';
+      h += '<span class="subtasks__title">' + ICON.split + 'Subtasks <span class="subtasks__count">' + done + '/' + subs.length + '</span></span>';
+      h += '<button class="subtasks__clear" id="clearSubsBtn">Remove all</button></div>';
+      subs.forEach(function (st, sj) {
+        h += '<div class="subtask' + (st.done ? " done" : "") + '">';
+        h += '<button class="subtask__check' + (st.done ? " done" : "") + '" data-sid="' + st.id + '" title="Toggle subtask">' + (st.done ? ICON.check : "") + '</button>';
+        h += '<span class="subtask__num">' + (idx + 1) + "." + (sj + 1) + '</span>';
+        h += '<input class="subtask__text" data-sid="' + st.id + '" value="" placeholder="Subtask…" />';
+        h += '<button class="subtask__del" data-sid="' + st.id + '" title="Remove subtask">' + ICON.x + '</button>';
+        h += '</div>';
+      });
+      h += '<button class="add-subtask" id="addSubBtn">' + ICON.plusSmall + 'Add subtask</button>';
+      h += '</div>';
+    } else {
+      h += '<button class="break-btn" id="breakBtn" title="Split this step into smaller subtasks (' + (idx + 1) + '.1, ' + (idx + 1) + '.2, …). If the step already contains a sub-list it is used automatically.">' + ICON.split + 'Break into subtasks</button>';
+    }
+    return h + '</div>';
+  }
+  function wireSubtasks(v, list, step) {
+    var subs = step.subtasks || [];
+    if (subs.length) {
+      v.querySelectorAll(".subtask__check").forEach(function (b) { b.addEventListener("click", function () { toggleSubtask(b.getAttribute("data-sid")); }); });
+      v.querySelectorAll(".subtask__del").forEach(function (b) { b.addEventListener("click", function () { deleteSubtask(b.getAttribute("data-sid")); }); });
+      v.querySelectorAll(".subtask__text").forEach(function (inp) {
+        var sid = inp.getAttribute("data-sid");
+        var st = subs.filter(function (x) { return x.id === sid; })[0];
+        inp.value = st ? st.text : "";
+        inp.addEventListener("input", function () { if (st) { st.text = inp.value; list.updatedAt = Date.now(); clearTimeout(noteSaveTimer); noteSaveTimer = setTimeout(function () { persist(); flashSaved(); }, 400); } });
+        inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addSubtask(true); } });
+      });
+      var ab = v.querySelector("#addSubBtn"); if (ab) ab.addEventListener("click", function () { addSubtask(true); });
+      var cb = v.querySelector("#clearSubsBtn"); if (cb) cb.addEventListener("click", clearSubtasks);
+    } else {
+      var bb = v.querySelector("#breakBtn"); if (bb) bb.addEventListener("click", breakIntoSubtasks);
+    }
   }
 
   function exportData() {
@@ -657,6 +847,7 @@
     } else {
       html += '<div class="step-text">' + formatInline(step.text) + '</div>';
       if (step.description) html += '<div class="step-desc">' + formatMultiline(step.description) + '</div>';
+      html += subtasksHtml(step, i);
     }
     html += '</div>';
     if (!editingStep) {
@@ -717,6 +908,7 @@
         noteSaveTimer = setTimeout(function () { persist(); flashSaved(); }, 400);
       });
       note.addEventListener("keydown", function (e) { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); persist(); go(1); } });
+      wireSubtasks(v, list, step);
     }
 
     var chips = v.querySelector("#chips");

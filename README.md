@@ -10,12 +10,13 @@ Paste in any "10 steps to do X" list an LLM gives you, hit **Create checklist**,
 
 You can use the live link above, or run it locally — **just open `index.html` in your browser** (double-click it). No install, no server, no internet required.
 
-1. **Paste a list** into the box. Numbered lists, bullets, markdown, or plain lines all work. Lines under a step (indented or continuation text) become that step's details.
-2. **Create checklist** — it splits the text into steps.
+1. **Paste a list** into the box. It splits only on the **top-level step numbers** (1, 2, 3 …). Nested numbered lists, bullets, and prose stay inside the parent step's details — so a long guide becomes a short, manageable list instead of 20+ items.
+2. **Create checklist** — it builds the steps.
 3. **Walk through** each step: **Mark complete** or **Skip** it, add notes, and use **Previous / Next** (or the ← → arrow keys) to move.
-4. **Jump around** with the numbered overview strip at the bottom.
-5. **Copy for AI** (top right) copies the list as plain text with every step's status and notes, ready to paste back into an AI agent.
-6. Past lists live in the **left sidebar** with live progress. Click to reopen, rename via the title, or delete.
+4. **Break into subtasks** — on any step, click *Break into subtasks* to expand it into checkable items (e.g. 5.1–5.5). If the step's details already contain a sub-list it's used automatically; otherwise you can add subtasks by hand.
+5. **Jump around** with the numbered overview strip at the bottom.
+6. **Copy for AI** (top right) copies the list as plain text with every step's status, subtasks, and notes, ready to paste back into an AI agent.
+7. Past lists live in the **left sidebar** with live progress. Click to reopen, rename via the title, or delete.
 
 ### What "Copy for AI" produces
 
@@ -29,7 +30,10 @@ Progress: 2/6 completed, 1 skipped, 3 not attempted
    Notes: Skipping — covered by existing CI pipeline.
 3. [Completed] Run the full test suite locally and confirm it passes
    Notes: Ran npm test locally, 142 passing.
-4. [Not attempted] Commit with a clear message and push the branch
+4. [Not attempted] Open a pull request and request a review
+   4.1 [x] Push the branch to origin
+   4.2 [ ] Fill in the PR template
+   4.3 [ ] Add reviewers
 ...
 ```
 
